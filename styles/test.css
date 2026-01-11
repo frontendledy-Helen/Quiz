@@ -1,0 +1,168 @@
+.test {
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.test-pre-title {
+    font-size: 20px;
+    line-height: 24px;
+    color: #DCDCF3;
+}
+
+.test-progress-bar {
+    display: flex;
+    margin-top: 60px;
+    margin-bottom: 80px;
+}
+
+.test-question-title {
+    font-size: 36px;
+    line-height: 43px;
+    font-family: "Museo Sans Cyrl Bold", sans-serif;
+}
+
+.test-question-title span {
+    color: #6933DC;
+}
+
+.test-question-options {
+    margin-top: 58px;
+    min-height: 344px; /*чтобы при увеличении текста блок не расширялся и нижние элементы не смещались*/
+}
+
+.test-question-option {
+    font-size: 20px;
+    line-height: 24px;
+    margin-bottom: 20px;
+    display: flex;
+}
+
+.test-question-option label {
+    cursor: pointer;
+}
+
+.test-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.test-time {
+    display: flex;
+    align-items: center;
+}
+
+.test-time-text {
+    font-size: 17px;
+    line-height: 20px;
+    color: #6933DC;
+    margin-right: 15px;
+}
+
+.test-time-clock {
+    background-image: url(../images/time.png);
+    background-size: cover;
+    background-position: center;
+    width: 27px;
+    height: 29px;
+    /*для текста внутри картинки background-image*/
+    font-size: 10px;
+    text-align: center;
+    line-height: 30px;
+}
+
+.pass-question {
+    margin-top: 10px;
+}
+
+/*внешний кружок input*/
+input[type="radio"] {
+    appearance: none; /* удалить стандартный кружок */
+    -webkit-appearance: none; /* удалить стандартный кружок */
+    width: 20px;
+    height: 20px;
+    border: 3px solid #6933DC;
+    border-radius: 50%;
+    margin: 0 13px 0 0; /*убрать стандрартные отступы у кружка*/
+    transform: translateY(2px); /*сместить кружок вверх по вертикали*/
+
+    display: grid; /*чтобы внутренний кружок отображался*/
+    place-content: center; /*чтобы внутренний кружок отображался по центру*/
+}
+
+/*внутренний кружочек, который появляется когда выбран (checked) input*/
+input[type="radio"]::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: inset 10px 10px #6933DC; /*тень внутри*/
+    transition: .2s ease transform; /*медленное появление кружочка*/
+    transform: scale(0); /*сначала кружочек не видим*/
+}
+
+/*когда input выбран*/
+input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+
+.test-progress-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative; /*чтобы палочке между кружками сделать позиционирование */
+}
+
+/*отступ слува между кружками, кроме первого*/
+.test-progress-bar-item:not(:first-child) {
+    margin-left: 130px;
+}
+
+/*добавим перекладину между кружков, кроме последнего*/
+.test-progress-bar-item:not(:last-child)::before {
+    content: "";
+    z-index: -1;
+    position: absolute;
+    width: 184px;
+    height: 6px;
+    background: #DCDCF3;
+    left: 28px;
+    top: 10px;
+}
+
+/*меняем стиль у перекладины, если вопрос пройден*/
+.test-progress-bar-item.complete:not(:last-child)::before {
+    background: #6933DC;
+}
+
+.test-progress-bar-item-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #DCDCF3;
+}
+
+.test-progress-bar-item-text {
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 16px;
+}
+
+/*меняем стиль у кружочка, если вопрос пройден*/
+.test-progress-bar-item.complete .test-progress-bar-item-circle,
+.test-progress-bar-item.active .test-progress-bar-item-circle {
+    background: #6933DC;
+}
+
+.test-progress-bar-item.active::after {
+    content: '';
+    border-radius: 50%;
+    position: absolute;
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+    background: #DCDCF3;
+    top: 6px;  /*позиционирование по центру внутреннего кружка*/
+}
+
+
