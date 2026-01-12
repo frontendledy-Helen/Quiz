@@ -186,7 +186,6 @@
             }
             console.log(this.userResult)
 
-
             // меняем индекс текущего вопроса после нажатия кнопки ДАЛЕЕ, после этого будем менять вид прогресс-бара
             if (action === 'next' || action === 'pass') { //если кнопка нажата на сдвиг вперед
                 this.currentQuestionIndex++; // то будем увеличивать текущий индекс вопроса на 1
@@ -234,6 +233,9 @@
                 results: this.userResult  // и будем передавать ответы
             }));
 
+            // Преобразуем массив ответов пользователя в строку (id через запятую)
+            const answerIds = this.userResult.map(item => item.chosenAnswerId).join(',');
+            console.log('Ответы пользователя' + answerIds)
 
             // далее получим новые данные от сервера
             if (xhr.status === 200 && xhr.responseText) { // проверим данные
@@ -246,7 +248,7 @@
                 if (result) {
                     console.log(result)
                     //перейдем на страничку result.html
-                    location.href = 'result.html?score=' + result.score + '&total=' + result.total; // пропишем в url полученные с сервера score и total (проверяем F12 - сеть - pass-quiz?id= - предварительный просмотр)
+                    location.href = 'result.html?score=' + result.score + '&total=' + result.total + '&selected_answers=' + answerIds; // пропишем в url полученные с сервера score и total (проверяем F12 - сеть - pass-quiz?id= - предварительный просмотр)
                 }
             } else {
                 location.href = 'index.html'; // если статус будет не === 200

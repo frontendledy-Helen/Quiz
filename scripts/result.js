@@ -4,6 +4,7 @@
         init() {
             const that = this;
             const url = new URL(location.href)  //распарсим наш URL, который прописали на странице test.js (location.href = 'result.html?score=' + result.score + '&total=' + result.total)
+            const testId = url.searchParams.get('id'); // проверка наличия id в строке url
             document.getElementById('result-score').innerText = url.searchParams.get('score') + '/' + url.searchParams.get('total'); // пропишем в html результат тестирования
 
 
@@ -13,9 +14,10 @@
             }
 
         },
+
         processForm() { // при клике на кнопку отправки, будет вызов этой Ф (выше вызов)
 
-                location.href = 'answers.html' //переходим на страничку choice.html
+            location.href = 'answers.html' + location.search; //переходим на страничку choice.html
         }
 
     }
