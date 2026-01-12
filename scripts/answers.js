@@ -1,33 +1,37 @@
 (function () {
     const Answers = {
-        quiz: null,
-        quizzes: [], // сюда будем размешать объект полученный из https://testologia.ru/get-quizzes
+        quiz: [],
         init() {
 
-            const url = new URL(location.href)
-            console.log(url)
+            const choiceTestId = localStorage.getItem('selectedTest');
+            console.log("id выбранного теста - " + choiceTestId)
 
-            // запрос на сервер
-            const xhr = new XMLHttpRequest(); // в xhr размещаем новый объект для наших запросов
-            xhr.open('GET', 'https://testologia.ru/get-quizzes', false);
-            xhr.send(); //отправить запрос
+            if (choiceTestId) { // если параметр testId существует
+                const xhr = new XMLHttpRequest();   // запрос на сервер о конкретном тесте
+                xhr.open('GET', 'https://testologia.ru/get-quiz?id=' + choiceTestId, false)
+                xhr.send();
 
-            if (xhr.status === 200 && xhr.responseText) { // если ответ пришел
-                try { // опасную операцию обернем в try/catch - на случай если придут неправильные данные
-                    this.quizzes = JSON.parse(xhr.responseText)  // превратим полученные данные в js объект, распарсим и расположим в объект quizzes, который создали на верху
-                } catch (e) {
-                    location.href = 'index.html'; // если будет ошибка
+                if (xhr.status === 200 && xhr.responseText) {
+                    try { // обезопасим себя
+                        this.quiz = JSON.parse(xhr.responseText); //распарсим пришедшие с backend свойство нашего главного объекта quiz, получим данные для quiz
+                    } catch (e) {
+                        location.href = 'index.html';
+                    }
+                    this.startQuiz(); // вызов Ф startQuiz, отобразится первый вопрос
+                } else {
+                    location.href = 'index.html'; // если статус будет не === 200
                 }
-                this.processQuizzes();// когда получили все данные вызовем Ф, которую создали ниже
-            } else {
-                location.href = 'index.html'; // если статус будет не === 200
-            }
-        },
-        processQuizzes() { //обработка данных, полученных с сервера - вывод этих данных на страницу html
-            console.log(this.quizzes); //увидим что пришло с backend (видим id и name)
 
+            } else {
+                location.href = 'index.html'; //если параметр testId не существует отправим пользователя на главную страницу
+            }
+
+        },
+        startQuiz() { //обработка данных, полученных с сервера - вывод этих данных на страницу html
+            console.log(this.quiz); //увидим что пришло с backend (видим id,name,questions)
 
         }
+
 
     }
     Answers.init();

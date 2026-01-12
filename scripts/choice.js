@@ -58,10 +58,19 @@
             }
         },
         chooseQuiz(element) { //Ф, благодаря которой будет происходить выбор теста и совершаться
-           const dataId = element.getAttribute('data-id') //  найдем id input`a, по которому сделали клик
+            const dataId = element.getAttribute('data-id') //  найдем id input`a, по которому сделали клик
             if (dataId) { // если есть id
                 location.href = 'test.html' + location.search + '&id=' + dataId; // отправляем на страницу test.html + добавляем текущие параметры name?lastname&email + id=dataId
+                this.saveSelectedTest(dataId);
             }
+        },
+        saveSelectedTest(dataId) {
+            // Сохраняем testId в localStorage
+            localStorage.setItem('selectedTest', dataId);
+
+            // Проверяем, что значение реально сохранилось
+            let savedValue = localStorage.getItem('selectedTest');
+            console.log(`Сохранено значение: ${savedValue}`); // Выведем в консоль сохраненное значение
         }
     }
     Choice.init();
