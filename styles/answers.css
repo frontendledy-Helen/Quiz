@@ -85,10 +85,16 @@
 
 .right {
     color: #5FDC33;
+    font-size: 20px;
+    display: flex;
+    flex: 1;
 }
 
 .wrong {
     color: #DC3333;
+    font-size: 20px;
+    display: flex;
+    flex: 1;
 }
 
 .result-back {
