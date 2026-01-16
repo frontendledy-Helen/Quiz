@@ -35,10 +35,13 @@
     line-height: 24px;
     margin-bottom: 20px;
     display: flex;
+    align-items: center;
 }
 
 .test-question-option label {
     cursor: pointer;
+    display: flex;
+    flex: 1;
 }
 
 .test-actions {

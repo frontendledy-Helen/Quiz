@@ -5,7 +5,6 @@
         answersCircleElement: null,
         answersTextElement: null,
         answers: [], //верные ответы на вопросы выбранного теста
-        answerId: null, //id - ответы на все вопросы
         quiz: [], // выбранный пользователем тест с вопросами и ответами
         init() {
 
@@ -14,33 +13,60 @@
 
 
             if (choiceTestId) { // если параметр choiceTestId существует
-                const xhr = new XMLHttpRequest();   // запрос на сервер о конкретном тесте
-                xhr.open('GET', 'https://testologia.ru/get-quiz?id=' + choiceTestId, false)
-                xhr.send();
-
-                if (xhr.status === 200 && xhr.responseText) {
-                    try { // обезопасим себя
-                        this.quiz = JSON.parse(xhr.responseText); //распарсим пришедшие с backend свойство нашего главного объекта quiz, получим данные для quiz
-                    } catch (e) {
-                        location.href = 'index.html';
-                    }
-                    this.showSelectedTest(); // вызов Ф showSelectedTest, отобразится выбранный пользователем тест
-                } else {
-                    location.href = 'index.html'; // если статус будет не === 200
-                }
-
+                this.quiz = this.getData('https://testologia.ru/get-quiz?id=' + choiceTestId) //для сокращения кода используем Ф getData (создана ниже)
+                this.showSelectedTest(); // вызов Ф showSelectedTest, отобразится выбранный пользователем тест
             } else {
                 location.href = 'index.html'; //если параметр testId не существует отправим пользователя на главную страницу
             }
 
+            //Это не нужно, т.к. прописали Ф getData
+            // const xhr = new XMLHttpRequest();   // запрос на сервер о конкретном тесте
+            // xhr.open('GET', 'https://testologia.ru/get-quiz?id=' + choiceTestId, false)
+            // xhr.send();
+            //
+            // if (xhr.status === 200 && xhr.responseText) {
+            //     try { // обезопасим себя
+            //         this.quiz = JSON.parse(xhr.responseText); //распарсим пришедшие с backend свойство нашего главного объекта quiz, получим данные для quiz
+            //     } catch (e) {
+            //         location.href = 'index.html';
+            //     }
+            //
+            // } else {
+            //     location.href = 'index.html'; // если статус будет не === 200
+            // }
 
-            const xhr2 = new XMLHttpRequest();   // запрос на сервер о правильных ответах
-            xhr2.open('GET', 'https://testologia.ru/get-quiz-right?id=' + choiceTestId, false)
-            xhr2.send();
+            if (choiceTestId) { // если параметр choiceTestId существует
+                this.answers = this.getData('https://testologia.ru/get-quiz-right?id=' + choiceTestId) //для сокращения кода используем Ф getData (создана ниже)
+                this.comparisonOptions(); // вызов Ф comparisonOptions, сравнение вариантов ответов
+            } else {
+                location.href = 'index.html'; //если параметр testId не существует отправим пользователя на главную страницу
+            }
 
-            if (xhr2.status === 200 && xhr2.responseText) {
+            //Это не нужно, т.к. прописали Ф getData
+            // const xhr2 = new XMLHttpRequest();   // запрос на сервер о правильных ответах
+            // xhr2.open('GET', 'https://testologia.ru/get-quiz-right?id=' + choiceTestId, false)
+            // xhr2.send();
+            //
+            // if (xhr2.status === 200 && xhr2.responseText) {
+            //     try { // обезопасим себя
+            //         this.answers = JSON.parse(xhr2.responseText); //распарсим пришедшие с backend правильные ответы
+            //     } catch (e) {
+            //         location.href = 'index.html';
+            //     }
+            //
+            // } else {
+            //     location.href = 'index.html'; // если статус будет не === 200
+            // }
+
+        },
+        getData(url) { // общая функция если несколько запросов, оптимизация кода
+            const xhr = new XMLHttpRequest();   // запрос на сервер
+            xhr.open('GET', url, false)
+            xhr.send();
+
+            if (xhr.status === 200 && xhr.responseText) { // если запрос успешно пришел
                 try { // обезопасим себя
-                    this.answers = JSON.parse(xhr2.responseText); //распарсим пришедшие с backend правильные ответы
+                    return JSON.parse(xhr.responseText); //распарсим пришедшие с backend правильные ответы
                 } catch (e) {
                     location.href = 'index.html';
                 }
@@ -81,7 +107,7 @@
                     answersTextElement.className = 'answer-text';
                     const answer = question.answers[j];
                     this.answerId = answer.id; // id всех ответов
-                    console.log('Ответы выгруженные с сервера - id - ' + this.answerId)
+                    // console.log('Ответы выгруженные с сервера - id - ' + this.answerId)
 
                     answersTextElement.innerHTML = answer.answer;
 
@@ -99,52 +125,56 @@
             const rightAnswersArray = this.answers // массив правильных ответов
             const url = new URL(location.href); //текущий URL на странице
             const selectedAnswers = url.searchParams.get('selected_answers'); //получили ответы пользователя из URL
-            const selectedAnswersArray = selectedAnswers.split(',').map(Number); // создали массив ответов пользователя
-            console.log('Ответы пользователя - ' + selectedAnswersArray)
-            console.log('Правильные ответы - ' + rightAnswersArray);
 
-            // Перебираем все вопросы
-            for (let i = 0; i < this.quiz.questions.length; i++) {
-                const question = this.quiz.questions[i];
-                const correctAnswer = this.answers[i]; // правильный ответ на текущий вопрос
-                const userAnswer = selectedAnswersArray[i]; // ответ пользователя на текущий вопрос
+            if (selectedAnswers) { //проверка, если данные с url получены
+                const selectedAnswersArray = selectedAnswers.split(',').map(Number); // создали массив ответов пользователя
+                // console.log('Ответы пользователя - ' + selectedAnswersArray)
+                // console.log('Правильные ответы - ' + rightAnswersArray);
 
-                // Перебираем все ответы на текущий вопрос
-                for (let j = 0; j < question.answers.length; j++) {
-                    const answer = question.answers[j]; //ответ на текущий вопрос
-                    const answerId = answer.id; // номер текущего ответа
+                // Перебираем все вопросы
+                for (let i = 0; i < this.quiz.questions.length; i++) {
+                    const question = this.quiz.questions[i];
+                    const correctAnswer = this.answers[i]; // правильный ответ на текущий вопрос
+                    const userAnswer = selectedAnswersArray[i]; // ответ пользователя на текущий вопрос
 
-                    const answerElement = document.querySelector(`.test-answer-option[data-question-index="${i}"][data-answer-index="${j}"]`);
-                    const answersCircleElement = answerElement.querySelector('.circle');
-                    const answersTextElement = answerElement.querySelector('.answer-text');
+                    // Перебираем все ответы на текущий вопрос
+                    for (let j = 0; j < question.answers.length; j++) {
+                        const answer = question.answers[j]; //ответ на текущий вопрос
+                        const answerId = answer.id; // номер текущего ответа
 
-                    // Удаляем старые классы
-                    answersCircleElement.classList.remove('green', 'red', 'circle');
-                    answersTextElement.classList.remove('right', 'wrong', 'answer-text');
+                        const answerElement = document.querySelector(`.test-answer-option[data-question-index="${i}"][data-answer-index="${j}"]`);
+                        const answersCircleElement = answerElement.querySelector('.circle');
+                        const answersTextElement = answerElement.querySelector('.answer-text');
 
-                    // Сравнение ответов
-                    if (answerId === correctAnswer) {
-                        if (answerId === userAnswer) {
-                            answersCircleElement.classList.add('green');
-                            answersTextElement.classList.add('right');
+                        // Удаляем старые классы
+                        answersCircleElement.classList.remove('green', 'red', 'circle');
+                        answersTextElement.classList.remove('right', 'wrong', 'answer-text');
+
+                        // Сравнение ответов
+                        if (answerId === correctAnswer) {
+                            if (answerId === userAnswer) {
+                                answersCircleElement.classList.add('green');
+                                answersTextElement.classList.add('right');
+                            } else {
+                                answersCircleElement.classList.add('circle');
+                                answersTextElement.classList.add('answer-text');
+                            }
+                        } else if (answerId === userAnswer) {
+                            answersCircleElement.classList.add('red');
+                            answersTextElement.classList.add('wrong');
                         } else {
-                            answersCircleElement.classList.add('circle');
-                            answersTextElement.classList.add('answer-text');
+                            answersCircleElement.className = 'circle';
+                            answersTextElement.className = 'answer-text';
                         }
-                    } else if (answerId === userAnswer) {
-                        answersCircleElement.classList.add('red');
-                        answersTextElement.classList.add('wrong');
-                    } else {
-                        answersCircleElement.className = 'circle';
-                        answersTextElement.className = 'answer-text';
                     }
                 }
+                this.backToResult = document.getElementById('back-to-result');
+                this.backToResult.onclick = function () {  // нажали на кнопку
+                    location.href = 'result.html' + location.search; //переходим на страничку result.html
+                }
+            } else {
+                location.href = 'index.html';
             }
-            this.backToResult = document.getElementById('back-to-result');
-            this.backToResult.onclick = function () {  // нажали на кнопку
-                location.href = 'result.html' + location.search; //переходим на страничку result.html
-            }
-
         }
 
 
