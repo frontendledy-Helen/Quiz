@@ -13,11 +13,11 @@ export class Choice {
             try { // опасную операцию обернем в try/catch - на случай если придут неправильные данные
                 this.quizzes = JSON.parse(xhr.responseText)  // превратим полученные данные в js объект, распарсим и расположим в объект quizzes, который создали на верху
             } catch (e) {
-                location.href = 'index.html'; // если будет ошибка
+                location.href = '#/'; // если будет ошибка
             }
             this.processQuizzes();// когда получили все данные вызовем Ф, которую создали ниже
         } else {
-            location.href = 'index.html'; // если статус будет не === 200
+            location.href = '#/'; // если статус будет не === 200
         }
     }
 
@@ -63,7 +63,7 @@ export class Choice {
     chooseQuiz(element) { //Ф, благодаря которой будет происходить выбор теста и совершаться
         const dataId = element.getAttribute('data-id') //  найдем id input`a, по которому сделали клик
         if (dataId) { // если есть id
-            location.href = 'test.html' + location.search + '&id=' + dataId; // отправляем на страницу test.html + добавляем текущие параметры name?lastname&email + id=dataId
+            location.href = '#/test' + location.search + '&id=' + dataId; // отправляем на страницу test.html + добавляем текущие параметры name?lastname&email + id=dataId
             this.saveSelectedTest(dataId);
         }
     }
