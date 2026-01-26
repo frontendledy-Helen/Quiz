@@ -1,6 +1,9 @@
-(function () {
+class Form {
 
-    const Form = {
+    constructor() {
+
+
+    }
         agreeElement: null, //создадим элемент checkbox, а потом в него уже разместим найденный элемент checkbox (ниже)
         processElement: null, // создадим элемент кнопка, а потом в него уже разместим найденный элемент с id=process (ниже)
         fields: [ //создадим массив из нашей формы регистрации
