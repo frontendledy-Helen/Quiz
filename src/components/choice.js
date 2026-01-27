@@ -1,9 +1,15 @@
+import { UrlManager } from '../utils/url-manager.js';
+
 export class Choice {
 
     constructor() {
 
         this.quizzes = []; // сюда будем размешать объект полученный из https://testologia.ru/get-quizzes
-        checkUserData() // проверка на заполнение URL, описанная в файле common.js
+
+        //проверка наличия name&lastname&email в строке url
+        this.routeParams = UrlManager.getQueryParams() // при открытии страницы получаем параметры из URL
+        UrlManager.checkUserData(this.routeParams) // проверка на заполнение URL, описанная в файле url-manager.js
+
         // запрос на сервер
         const xhr = new XMLHttpRequest(); // в xhr размещаем новый объект для наших запросов
         xhr.open('GET', 'https://testologia.ru/get-quizzes', false);
@@ -45,7 +51,7 @@ export class Choice {
                 choiceOptionArrowElement.className = 'choice-option-arrow';
 
                 const choiceOptionImageElement = document.createElement('img'); //подключение стрелочки, у всех input одна и та же
-                choiceOptionImageElement.setAttribute('src', 'images/choice-arrow.png');
+                choiceOptionImageElement.setAttribute('src', 'static/images/choice-arrow.png');
                 choiceOptionImageElement.setAttribute('alt', 'Стрелка');
 
                 // вложим созданные элументы друг в друга
@@ -63,7 +69,8 @@ export class Choice {
     chooseQuiz(element) { //Ф, благодаря которой будет происходить выбор теста и совершаться
         const dataId = element.getAttribute('data-id') //  найдем id input`a, по которому сделали клик
         if (dataId) { // если есть id
-            location.href = '#/test' + location.search + '&id=' + dataId; // отправляем на страницу test.html + добавляем текущие параметры name?lastname&email + id=dataId
+            location.href = '#/test?name=' + this.routeParams.name + '&lastName=' + this.routeParams.lastName + '&email=' +
+                this.routeParams.email + '&id=' + dataId; // отправляем на страницу test.html + добавляем текущие параметры name?lastname&email + id=dataId
             this.saveSelectedTest(dataId);
         }
     }

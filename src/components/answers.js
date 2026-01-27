@@ -1,3 +1,5 @@
+import { UrlManager } from '../utils/url-manager.js';
+
 export class Answers {
 
     constructor() {
@@ -9,7 +11,9 @@ export class Answers {
         this.answers = []; //верные ответы на вопросы выбранного теста
         this.quiz = []; // выбранный пользователем тест с вопросами и ответами
 
-        const choiceTestId = localStorage.getItem('selectedTest');
+        this.routeParams = UrlManager.getQueryParams() // при открытии страницы получаем параметры из URL
+
+        const choiceTestId = localStorage.getItem('selectedTest'); //найдем id теста выбранного пользователем (пепередано через localStorage)
         console.log("id выбранного теста - " + choiceTestId)
 
 
@@ -93,8 +97,10 @@ export class Answers {
 
     comparisonOptions() {  // сравнение вариантов ответов
         const rightAnswersArray = this.answers // массив правильных ответов
-        const url = new URL(location.href); //текущий URL на странице
-        const selectedAnswers = url.searchParams.get('selected_answers'); //получили ответы пользователя из URL
+
+        const that = this;
+
+        const selectedAnswers = this.routeParams.selected_answers; //получили ответы пользователя из URL
 
         if (selectedAnswers) { //проверка, если данные с url получены
             const selectedAnswersArray = selectedAnswers.split(',').map(Number); // создали массив ответов пользователя
@@ -138,12 +144,23 @@ export class Answers {
                     }
                 }
             }
-            this.backToResult = document.getElementById('back-to-result');
-            this.backToResult.onclick = function () {  // нажали на кнопку
-                location.href = '#/result' + location.search; //переходим на страничку result.html
-            }
+
         } else {
             location.href = '#/';
         }
+
+        this.backToResult = document.getElementById('back-to-result');
+        this.backToResult.onclick = function () { // нажали на кнопку
+            that.moveResult()
+        }
+    }
+
+
+
+    // location.search не будет работать если у нас свой путь к файлам описанный в router.js (#/)
+
+    moveResult() { // при клике на кнопку отправки, будет вызов этой Ф (выше вызов)
+
+        location.href = '#/result?score=' + this.routeParams.score + '&total=' + this.routeParams.total + '&selected_answers=' + this.routeParams.selected_answers; //переходим на страничку result.html
     }
 }

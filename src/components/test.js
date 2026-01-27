@@ -1,3 +1,5 @@
+import {UrlManager} from "../utils/url-manager.js";
+
 export class Test {
 
     constructor() {
@@ -11,13 +13,14 @@ export class Test {
         this.currentQuestionIndex = 1; // индекс ТЕКУЩЕГО вопроса (полученного с сервера), (но первый у нас будет с индексом -1)
         this.userResult = []; //массив для сохранения выбранных пользователем ответов, после нажатия на кнопку ДАЛЕЕ после каждого вопроса, в Ф move()
 
-        checkUserData(); //проверка наличия name&lastname&email в строке url
-        const url = new URL(location.href);
-        const testId = url.searchParams.get('id'); // проверка наличия id в строке url
+        //проверка наличия name&lastname&email в строке url
+        this.routeParams = UrlManager.getQueryParams() // при открытии страницы получаем параметры из URL
+        UrlManager.checkUserData(this.routeParams) // проверка на заполнение URL, описанная в файле url-manager.js
 
-        if (testId) { // если параметр testId существует
-            const xhr = new XMLHttpRequest();   // запрос на сервер о конкретном тесте
-            xhr.open('GET', 'https://testologia.ru/get-quiz?id=' + testId, false)
+        // проверка наличия id в строке url (this.routeParams.id)
+        if (this.routeParams.id) { // если параметр id в URL существует
+            const xhr = new XMLHttpRequest();   // запрос на сервер о конкретном тесте по его id (this.routeParams.id)
+            xhr.open('GET', 'https://testologia.ru/get-quiz?id=' + this.routeParams.id, false)
             xhr.send();
 
             if (xhr.status === 200 && xhr.responseText) {
@@ -219,19 +222,13 @@ export class Test {
     }
 
     complete() { // Ф завершения теста, с сохранением ответов, которые пользователь выбрал и отправкой их на сервер
-        const url = new URL(location.href); // создаем объект заново (в самом начале уже создавали) - можно вынести в объекты массива
-        const id = url.searchParams.get('id'); // находим параметры пользователя
-        const name = url.searchParams.get('name'); // находим параметры пользователя
-        const lastName = url.searchParams.get('lastName'); // находим параметры пользователя
-        const email = url.searchParams.get('email'); // находим параметры пользователя
-
         const xhr = new XMLHttpRequest(); // делаем новый запрос на сервер
-        xhr.open('POST', 'https://testologia.ru/pass-quiz?id=' + id, false); // POST т.к. отправляем данные, в адресе передаем id (?id=)
+        xhr.open('POST', 'https://testologia.ru/pass-quiz?id=' + this.routeParams.id, false); // POST т.к. отправляем данные, в адресе передаем id (?id=)
         xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')// чтобы сервер понял что мы будем отправлять на сервер JSON данные
         xhr.send(JSON.stringify({  // отправляем наши данные (и превращаем наш javascript объект в JSON строку) - создаем объект
-            name: name,
-            lastName: lastName,
-            email: email,
+            name: this.routeParams.name,
+            lastName: this.routeParams.lastName,
+            email: this.routeParams.email,
             results: this.userResult  // и будем передавать ответы
         }));
 
