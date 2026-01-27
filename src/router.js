@@ -67,6 +67,13 @@ export class Router {
 
     // async - асинхронная Ф, используется метод await fetch
     async openRoute() {  //Ф открыть определеннфй роут
+
+        // Добавим отладку для понимания проблемы
+        const currentHash = window.location.hash;
+        const routePart = currentHash.split('?')[0];
+        console.log('Текущий hash:', currentHash);
+        console.log('Ищем роут:', routePart);
+
         // newRoute - это тот роут который мы сейчас будем открывать (route: '#/form')
         const newRoute = this.routes.find(item => { // с помощью метода find ищем нужный роут, исходя мз того какой у нас сейчас прописан в URL
             return item.route === window.location.hash.split('?')[0]; // найдем роут который сейчас открыт, первую часть перед знаком ?

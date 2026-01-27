@@ -161,6 +161,25 @@ export class Answers {
 
     moveResult() { // при клике на кнопку отправки, будет вызов этой Ф (выше вызов)
 
-        location.href = '#/result?score=' + this.routeParams.score + '&total=' + this.routeParams.total + '&selected_answers=' + this.routeParams.selected_answers; //переходим на страничку result.html
+        console.log('moveResult вызван, routeParams:', this.routeParams);
+
+        // Проверяем наличие параметров
+        if (!this.routeParams || !this.routeParams.score || !this.routeParams.total) {
+            console.error('Отсутствуют необходимые параметры!', this.routeParams);
+            return;
+        }
+
+        const score = encodeURIComponent(this.routeParams.score || '');
+        const total = encodeURIComponent(this.routeParams.total || '');
+        const selectedAnswers = encodeURIComponent(this.routeParams.selected_answers || '');
+
+        const newUrl = '#/result?score=' + score + '&total=' + total + '&selected_answers=' + selectedAnswers;
+        console.log('Переход на:', newUrl);
+
+        location.href = newUrl;
+
+
+
+        // location.href = '#/result?score=' + this.routeParams.score + '&total=' + this.routeParams.total + '&selected_answers=' + this.routeParams.selected_answers; //переходим на страничку result.html
     }
 }
