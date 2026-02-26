@@ -1,23 +1,11 @@
 export class Form {
 
-    constructor() {
+    constructor(page) {
         this.agreeElement = null; //создадим элемент checkbox, а потом в него уже разместим найденный элемент checkbox (ниже)
         this.processElement = null; // создадим элемент кнопка, а потом в него уже разместим найденный элемент с id=process (ниже)
+        this.page = page; // создадим элемент чтобы потом использовать
+
         this.fields = [ //создадим массив из нашей формы регистрации
-            {
-                name: 'name',
-                id: 'name', //из файла html
-                element: null, // с помощью this.fields.forEach мы заполним вместо null найденный элемент по id
-                regex: /^[А-Я][а-я]+\s*$/,   //регулярные выражения для проверки поля
-                valid: false, //поле изначально пустое и не может быть валидно
-            },
-            {
-                name: 'lastName',
-                id: 'last-name', //из файла html
-                element: null, // с помощью this.fields.forEach мы заполним вместо null найденный элемент по id
-                regex: /^[А-Я][а-я]+\s*$/,   //регулярные выражения для проверки поля
-                valid: false, //поле изначально пустое и не может быть валидно
-            },
             {
                 name: 'email',
                 id: 'email', //из файла html
@@ -25,7 +13,31 @@ export class Form {
                 regex: /^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/,   //регулярные выражения для проверки поля
                 valid: false, //поле изначально пустое и не может быть валидно
             },
-        ]
+            {
+                name: 'password',
+                id: 'password', //из файла html
+                element: null, // с помощью this.fields.forEach мы заполним вместо null найденный элемент по id
+                regex: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/,   //регулярные выражения для проверки поля
+                valid: false, //поле изначально пустое и не может быть валидно
+            },
+        ];
+
+        if (this.page === 'signup') { // если страница регистрации то добавятся два инпута
+            this.fields.unshift({
+                    name: 'name',
+                    id: 'name', //из файла html
+                    element: null, // с помощью this.fields.forEach мы заполним вместо null найденный элемент по id
+                    regex: /^[А-Я][а-я]+\s*$/,   //регулярные выражения для проверки поля
+                    valid: false, //поле изначально пустое и не может быть валидно
+                },
+                {
+                    name: 'lastName',
+                    id: 'last-name', //из файла html
+                    element: null, // с помощью this.fields.forEach мы заполним вместо null найденный элемент по id
+                    regex: /^[А-Я][а-я]+\s*$/,   //регулярные выражения для проверки поля
+                    valid: false, //поле изначально пустое и не может быть валидно
+                });     // unshift () - чтобы поля name и lastName добавились перед логином и паролем
+        }
 
         const that = this; //когда срабатывает Ф init в переменную that размещаем текущий контекст this, т.е. ссылку на наш объект Form
         this.fields.forEach(item => {  //пройдемся по всем элементам массива fields
@@ -40,9 +52,11 @@ export class Form {
             that.processForm(); // вызов функции приклике на кнопку, данные будут передаваться по URL на другую страницу, сама работы Ф описана ниже
         }
 
-        this.agreeElement = document.getElementById('agree'); //нашли чекбокс и разместили его в элемент agreeElement, который создали ранее
-        this.agreeElement.onchange = function () {  // изменили состояние чекбокса
-            that.validateForm(); // сработал вызов Ф validateForm
+        if (this.page === 'signup') { // если страница регистрации
+            this.agreeElement = document.getElementById('agree'); //нашли чекбокс и разместили его в элемент agreeElement, который создали ранее
+            this.agreeElement.onchange = function () {  // изменили состояние чекбокса
+                that.validateForm(); // сработал вызов Ф validateForm
+            }
         }
     }
 
@@ -60,7 +74,7 @@ export class Form {
 
     validateForm() { //проверим все поля и раздизейблим кнопку для отправки, вызов ф-ции выше
         const validForm = this.fields.every(item => item.valid); //получим либо true либо false из массива fields
-        const isValid = this.agreeElement.checked && validForm; // итоговая проверка нашей формы
+        const isValid = this.agreeElement ? this.agreeElement.checked && validForm : validForm; // итоговая проверка нашей формы , тернарный оператор для страницы login
         if (isValid) {
             this.processElement.removeAttribute('disabled');
         } else {

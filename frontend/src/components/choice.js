@@ -51,7 +51,7 @@ export class Choice {
                 choiceOptionArrowElement.className = 'choice-option-arrow';
 
                 const choiceOptionImageElement = document.createElement('img'); //подключение стрелочки, у всех input одна и та же
-                choiceOptionImageElement.setAttribute('src', 'static/images/choice-arrow.png');
+                choiceOptionImageElement.setAttribute('src', '/images/choice-arrow.png');
                 choiceOptionImageElement.setAttribute('alt', 'Стрелка');
 
                 // вложим созданные элументы друг в друга
