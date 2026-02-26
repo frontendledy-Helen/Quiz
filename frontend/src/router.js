@@ -75,7 +75,7 @@ export class Router {
     }
 
     // async - асинхронная Ф, используется метод await fetch
-    async openRoute() {  //Ф открыть определеннфй роут
+    async openRoute() {  //Ф открыть определенный роут
 
         // Добавим отладку для понимания проблемы
         const currentHash = window.location.hash;

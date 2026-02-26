@@ -83,15 +83,44 @@ export class Form {
         return isValid;
     }
 
-    processForm() { // при клике на кнопку отправки, будет вызов этой Ф (выше вызов)
+    async processForm() { // при клике на кнопку отправки, будет вызов этой Ф (выше вызов)
         if (this.validateForm()) { //если форма валидна
 
-            let paramString = ''; //размещаем пустую строку, куда будем размещать значение каждого параметра
-            this.fields.forEach(item => {
-                paramString += (!paramString ? '?' : '&') + item.name + '=' + item.element.value; //знаки ? и & в URL-адресе используются для передачи параметров запроса
-            })
+            if (this.page === 'signup') { // отправка запроса на регистрацию
 
-            location.href = '#/choice' + paramString; //переходим на страничку choice.html + добавим данные в URL-адрес
+                try {
+                    const response = await fetch('http://localhost:3000/api/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json', // отправлять объект json
+                            'Accept': 'application/json'  // получать объект json
+                        },
+                        body: JSON.stringify({
+                            name: this.fields.find(item => item.name === 'name').element.value, // находим html элемент
+                            lastName: this.fields.find(item => item.name === 'lastName').element.value, // находим html элемент
+                            email: this.fields.find(item => item.name === 'email').element.value, // находим html элемент
+                            password: this.fields.find(item => item.name === 'password').element.value, // находим html элемент
+                        })
+                    });
+
+                    if (response.status < 200 || response.status >= 300) {
+                        throw new Error(response.message); // приходит сообщение от back
+                    }
+
+                    const result = await response.json();
+                    if (result) {
+                        if (result.error || !result.user) {
+                            throw new Error(result.message);
+                        }
+
+                        location.href = '#/choice';
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            } else {
+
+            }
         }
     }
 }
