@@ -1,30 +1,53 @@
-import { UrlManager } from '../utils/url-manager.js';
+import {UrlManager} from '../utils/url-manager.js';
+import {CustomHttp} from "../services/custom-http.js";
+import config from "../../config/config.js";
+import {Auth} from "../services/auth.js";
 
 export class Choice {
 
     constructor() {
 
         this.quizzes = []; // сюда будем размешать объект полученный из https://testologia.ru/get-quizzes
-
+        this.testResult = null; // сюда будем получать результаты пройденных тестов для отображения на странице test.html
         //проверка наличия name&lastname&email в строке url
         this.routeParams = UrlManager.getQueryParams() // при открытии страницы получаем параметры из URL
-        UrlManager.checkUserData(this.routeParams) // проверка на заполнение URL, описанная в файле url-manager.js
 
-        // запрос на сервер
-        const xhr = new XMLHttpRequest(); // в xhr размещаем новый объект для наших запросов
-        xhr.open('GET', 'https://testologia.ru/get-quizzes', false);
-        xhr.send(); //отправить запрос
+        this.init();
+    }
 
-        if (xhr.status === 200 && xhr.responseText) {
-            try { // опасную операцию обернем в try/catch - на случай если придут неправильные данные
-                this.quizzes = JSON.parse(xhr.responseText)  // превратим полученные данные в js объект, распарсим и расположим в объект quizzes, который создали на верху
-            } catch (e) {
-                location.href = '#/'; // если будет ошибка
+    async init() {
+
+        // метод для получения всех тестов
+        try {
+            const result = await CustomHttp.request(config.host + '/tests')
+            if (result) {
+                if (result.error) {  //проверяем поле "error" которое приходит с backend и вообще есть ли user
+                    throw new Error(result.error);
+                }
+
+                this.quizzes = result;
             }
-            this.processQuizzes();// когда получили все данные вызовем Ф, которую создали ниже
-        } else {
-            location.href = '#/'; // если статус будет не === 200
+        } catch (error) {
+            return console.log(error);
         }
+
+        // делаем запрос на backend  о выполненных тестах ранее, об их результатах
+        const userInfo = Auth.getUserInfo(); // получаем данные юзера
+        if (userInfo) { // если юзер авторизован и мы получили его данные то делаем запрос о результатах пройденных тестов
+            try {
+                const result = await CustomHttp.request(config.host + '/tests/results?userId=' + userInfo.userId);
+                if (result) {
+                    if (result.error) {  //проверяем поле "error" которое приходит с backend и вообще есть ли user
+                        throw new Error(result.error);
+                    }
+
+                    this.testResult = result; // получили с бэка
+                }
+            } catch (error) {
+                return console.log(error);
+            }
+        }
+        this.processQuizzes();// когда получили все данные вызовем Ф и отработали два варианта init, которую создали ниже
     }
 
     processQuizzes() { //обработка данных, полученных с сервера - вывод этих данных на страницу html
@@ -50,6 +73,14 @@ export class Choice {
                 const choiceOptionArrowElement = document.createElement('div');
                 choiceOptionArrowElement.className = 'choice-option-arrow';
 
+                const result = this.testResult.find(item => item.testId === quiz.id) // если тесты уже были пройдены
+                if (result) { // будут появляться на страничке test.html маленькие блоки соответствующие testId
+                    const choiceOptionResultElement = document.createElement('div');
+                    choiceOptionResultElement.className = 'choice-option-result';
+                    choiceOptionResultElement.innerHTML = '<div>Результат</div><div>' + result.score + '/' + result.total + '</div>';
+                    choiceOptionElement.appendChild(choiceOptionResultElement);
+                }
+
                 const choiceOptionImageElement = document.createElement('img'); //подключение стрелочки, у всех input одна и та же
                 choiceOptionImageElement.setAttribute('src', '/images/choice-arrow.png');
                 choiceOptionImageElement.setAttribute('alt', 'Стрелка');
@@ -69,8 +100,7 @@ export class Choice {
     chooseQuiz(element) { //Ф, благодаря которой будет происходить выбор теста и совершаться
         const dataId = element.getAttribute('data-id') //  найдем id input`a, по которому сделали клик
         if (dataId) { // если есть id
-            location.href = '#/test?name=' + this.routeParams.name + '&lastName=' + this.routeParams.lastName + '&email=' +
-                this.routeParams.email + '&id=' + dataId; // отправляем на страницу test.html + добавляем текущие параметры name?lastname&email + id=dataId
+            location.href = '#/test?id=' + dataId; // отправляем на страницу test.html + добавляем текущие параметры name?lastname&email + id=dataId
             this.saveSelectedTest(dataId);
         }
     }

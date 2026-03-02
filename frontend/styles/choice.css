@@ -53,3 +53,21 @@
     display: block;
 }
 
+.choice-option-result {
+    position: absolute;
+    z-index: 2;  /*чтобы перекрыть стрелку*/
+    right: 18px;
+    top: 16px;
+    border: 1px solid #6933DC;
+    padding: 5px;
+    font-size: 12px;
+    line-height: 14px;
+    color: #6933DC;
+    background: #FFFFFF;  /*чтобы не было видно стрелки*/
+    text-align: center;
+}
+
+.choice-option-result div:first-child {  /*добавить между дивами пробел*/
+    margin-bottom: 3px;
+}
+

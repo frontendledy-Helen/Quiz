@@ -1,9 +1,20 @@
+import {CustomHttp} from "../services/custom-http.js";
+import {Auth} from "../services/auth.js";
+import config from "../../config/config.js";
+
 export class Form {
 
     constructor(page) {
         this.agreeElement = null; //создадим элемент checkbox, а потом в него уже разместим найденный элемент checkbox (ниже)
         this.processElement = null; // создадим элемент кнопка, а потом в него уже разместим найденный элемент с id=process (ниже)
         this.page = page; // создадим элемент чтобы потом использовать
+
+        // если польз. залогинен сразу перебрасываем его на страницу choice, минуя страницы login и signup
+        const accessToken = localStorage.getItem(Auth.accessTokenKey);
+        if (accessToken) {  //проверка залогинен пользователь или нет
+            location.href = '#/choice';
+            return; //обязательно завершить Ф, чтобы дальнейшие Ф не выполнялись
+        }
 
         this.fields = [ //создадим массив из нашей формы регистрации
             {
@@ -17,7 +28,7 @@ export class Form {
                 name: 'password',
                 id: 'password', //из файла html
                 element: null, // с помощью this.fields.forEach мы заполним вместо null найденный элемент по id
-                regex: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,}$/,   //регулярные выражения для проверки поля
+                regex: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,}$/,   //регулярные выражения для проверки поля
                 valid: false, //поле изначально пустое и не может быть валидно
             },
         ];
@@ -86,40 +97,48 @@ export class Form {
     async processForm() { // при клике на кнопку отправки, будет вызов этой Ф (выше вызов)
         if (this.validateForm()) { //если форма валидна
 
+            const email = this.fields.find(item => item.name === 'email').element.value;
+            const password = this.fields.find(item => item.name === 'password').element.value;
+
             if (this.page === 'signup') { // отправка запроса на регистрацию
 
                 try {
-                    const response = await fetch('http://localhost:3000/api/signup', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json', // отправлять объект json
-                            'Accept': 'application/json'  // получать объект json
-                        },
-                        body: JSON.stringify({
-                            name: this.fields.find(item => item.name === 'name').element.value, // находим html элемент
-                            lastName: this.fields.find(item => item.name === 'lastName').element.value, // находим html элемент
-                            email: this.fields.find(item => item.name === 'email').element.value, // находим html элемент
-                            password: this.fields.find(item => item.name === 'password').element.value, // находим html элемент
-                        })
-                    });
-
-                    if (response.status < 200 || response.status >= 300) {
-                        throw new Error(response.message); // приходит сообщение от back
-                    }
-
-                    const result = await response.json();
+                    const result = await CustomHttp.request(config.host + '/signup', 'POST', {
+                        name: this.fields.find(item => item.name === 'name').element.value, // находим html элемент
+                        lastName: this.fields.find(item => item.name === 'lastName').element.value, // находим html элемент
+                        email: email, // находим html элемент
+                        password: password, // находим html элемент
+                    })
                     if (result) {
-                        if (result.error || !result.user) {
+                        if (result.error || !result.user) {  //проверяем поле "error" которое приходит с backend и вообще есть ли user
                             throw new Error(result.message);
                         }
-
-                        location.href = '#/choice';
                     }
                 } catch (error) {
-                    console.log(error);
+                    return console.log(error); // завершение Ф если есть ошибка
                 }
-            } else {
+            }   // после регистрации сразу получим токен для продолжения теста, чтобы не вводить пароль еще раз и авторизовываться
+            try {
+                const result = await CustomHttp.request(config.host + '/login', 'POST', {
+                    email: email, // находим html элемент
+                    password: password, // находим html элемент
+                })
+                if (result) {
+                    if (result.error || !result.accessToken || !result.refreshToken || !result.refreshToken
+                        || !result.fullName || !result.userId) {  //проверяем поля которые приходят с backend в ответ на POST запрос
+                        throw new Error(result.message);
+                    }
 
+                    Auth.setTokens(result.accessToken, result.refreshToken)// сохраним токены которые получили с бакенд через localstorage
+                    Auth.setUserInfo({
+                        fullName: result.fullName,
+                        userId: result.userId
+                    })
+                    // если есть логин переводим пользователя на страницу choice
+                    location.href = '#/choice'; // теперь при переходе на страницу choice у нас уже есть токены в localstorage
+                }
+            } catch (error) {
+                console.log(error);
             }
         }
     }

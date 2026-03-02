@@ -1,4 +1,7 @@
 import {UrlManager} from "../utils/url-manager.js";
+import {CustomHttp} from "../services/custom-http.js";
+import config from "../../config/config.js";
+import {Auth} from "../services/auth.js";
 
 export class Test {
 
@@ -15,27 +18,27 @@ export class Test {
 
         //проверка наличия name&lastname&email в строке url
         this.routeParams = UrlManager.getQueryParams() // при открытии страницы получаем параметры из URL
-        UrlManager.checkUserData(this.routeParams) // проверка на заполнение URL, описанная в файле url-manager.js
+        // UrlManager.checkUserData(this.routeParams) // проверка на заполнение URL, описанная в файле url-manager.js
 
+        this.init();
+    }
+
+    async init() {
         // проверка наличия id в строке url (this.routeParams.id)
         if (this.routeParams.id) { // если параметр id в URL существует
-            const xhr = new XMLHttpRequest();   // запрос на сервер о конкретном тесте по его id (this.routeParams.id)
-            xhr.open('GET', 'https://testologia.ru/get-quiz?id=' + this.routeParams.id, false)
-            xhr.send();
+            try {
+                const result = await CustomHttp.request(config.host + '/tests/' + this.routeParams.id)
+                if (result) {
+                    if (result.error) {  //проверяем поле "error" которое приходит с backend и вообще есть ли user
+                        throw new Error(result.error);
+                    }
 
-            if (xhr.status === 200 && xhr.responseText) {
-                try { // обезопасим себя
-                    this.quiz = JSON.parse(xhr.responseText); //распарсим пришедшие с backend свойство нашего главного объекта quiz, получим данные для quiz
-                } catch (e) {
-                    location.href = '#/';
+                    this.quiz = result;
+                    this.startQuiz();// когда получили все данные вызовем Ф, которую создали ниже
                 }
-                this.startQuiz(); // вызов Ф startQuiz, отобразится первый вопрос
-            } else {
-                location.href = '#/'; // если статус будет не === 200
+            } catch (error) {
+                console.log(error);
             }
-
-        } else {
-            location.href = '#/'; //если параметр testId не существует отправим пользователя на главную страницу
         }
     }
 
@@ -61,13 +64,13 @@ export class Test {
         let seconds = 59; //максимальное время всего теста, который запускается, как только будет начинаться прохождение нашего теста
 
         //для того, чтобы остановить таймер, сохраним наш setInterval в перемнную interval
-        const interval = setInterval(function () {
+        this.interval = setInterval(function () {
             seconds--; // уменьшаем 59 на минус 1
             timerElement.innerText = seconds;// размещаем каждую секунду, то число которое получаем от 59-1
 
             if (seconds === 0) { //если время закончилось
                 this.complete();// вызываем Ф завершения тестирования (которую описываем в самом низу)
-                clearInterval(interval); // останавливаем таймер
+                clearInterval(this.interval); // останавливаем таймер
             }
         }.bind(this), 1000); //каждую миллисекунду  !!! для таймера контекст this не работает, поэтому используем .bind(this) в конце setInterval
     }
@@ -199,6 +202,7 @@ export class Test {
         }
 
         if (this.currentQuestionIndex > this.quiz.questions.length) { //если индекс вопроса больше чем то количество вопросов которое у нас есть
+            clearInterval(this.interval); // останавливаем таймер
             this.complete(); // вызываем Ф complete - завершения теста
             return; // чтобы далее Ф-ции forEach и showQuestion не выполнялись
         }
@@ -221,36 +225,28 @@ export class Test {
         this.showQuestion(); //после того как получили индекс вопроса, нужно его отобразить на нашей странице, вызываем функцию showQuestion
     }
 
-    complete() { // Ф завершения теста, с сохранением ответов, которые пользователь выбрал и отправкой их на сервер
-        const xhr = new XMLHttpRequest(); // делаем новый запрос на сервер
-        xhr.open('POST', 'https://testologia.ru/pass-quiz?id=' + this.routeParams.id, false); // POST т.к. отправляем данные, в адресе передаем id (?id=)
-        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')// чтобы сервер понял что мы будем отправлять на сервер JSON данные
-        xhr.send(JSON.stringify({  // отправляем наши данные (и превращаем наш javascript объект в JSON строку) - создаем объект
-            name: this.routeParams.name,
-            lastName: this.routeParams.lastName,
-            email: this.routeParams.email,
-            results: this.userResult  // и будем передавать ответы
-        }));
+    async complete() { // Ф завершения теста, с сохранением ответов, которые пользователь выбрал и отправкой их на сервер
+        const userInfo = Auth.getUserInfo();
+        if (!userInfo) {
+            location.href = '#/'
+        }
 
-        // Преобразуем массив ответов пользователя в строку (id через запятую)
-        const answerIds = this.userResult.map(item => item.chosenAnswerId).join(',');
-        console.log('Ответы пользователя' + answerIds)
+        try {
+            const result = await CustomHttp.request(config.host + '/tests/' + this.routeParams.id + '/pass', 'POST', {
 
-        // далее получим новые данные от сервера
-        if (xhr.status === 200 && xhr.responseText) { // проверим данные
-            let result = null;  //создадим локальную переменную, куда будем размещать ответ с сервера, изначально будет null
-            try { // обезопасим себя
-                result = JSON.parse(xhr.responseText); //распарсим в result пришедшие с backend данные и впишем новые значения
-            } catch (e) { // если ошибка отправим пользователя на главную страницу
-                location.href = '#/';
-            }
+                userId: userInfo.userId,
+                results: this.userResult
+            });
+
             if (result) {
-                console.log(result)
+                if (result.error) {  //проверяем поле "error" которое приходит с backend и вообще есть ли user
+                    throw new Error(result.error);
+                }
                 //перейдем на страничку result.html
-                location.href = '#/result?score=' + result.score + '&total=' + result.total + '&selected_answers=' + answerIds; // пропишем в url полученные с сервера score и total (проверяем F12 - сеть - pass-quiz?id= - предварительный просмотр)
+                location.href = '#/result?id=' + this.routeParams.id;
             }
-        } else {
-            location.href = '#/'; // если статус будет не === 200
+        } catch (error) {
+            console.log(error);
         }
     }
 }
