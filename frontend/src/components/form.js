@@ -115,7 +115,7 @@ export class Form {
                         }
                     }
                 } catch (error) {
-                    return console.log(error); // завершение Ф если есть ошибка
+                    return alert('Пользователь с таким email уже зарегистрирован!');
                 }
             }   // после регистрации сразу получим токен для продолжения теста, чтобы не вводить пароль еще раз и авторизовываться
             try {
@@ -132,7 +132,8 @@ export class Form {
                     Auth.setTokens(result.accessToken, result.refreshToken)// сохраним токены которые получили с бакенд через localstorage
                     Auth.setUserInfo({
                         fullName: result.fullName,
-                        userId: result.userId
+                        userId: result.userId,
+                        email: email
                     })
                     // если есть логин переводим пользователя на страницу choice
                     location.href = '#/choice'; // теперь при переходе на страницу choice у нас уже есть токены в localstorage

@@ -101,6 +101,23 @@
     margin-top: 60px;
 }
 
+.profile {
+    margin-top: 10px;
+    gap: 6px;
+}
+
+.profile-info {
+    font-size: 20px;
+    line-height: 24px;
+    color: #333333;
+}
+
+.profile-user {
+    font-size: 20px;
+    line-height: 24px;
+    color: #6933DC;
+}
+
 
 
 
